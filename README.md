@@ -54,7 +54,7 @@ waypoint tour through both rooms and returns to the start position.
    passes through the doorway → sweeps Room 2 (Bedroom) → returns
    to the start position in Room 1.
 5. On completion an **exploration path map** is saved to
-   `~/exploration_path.png` showing planned vs. actual path.
+   `output/exploration_path.png` showing planned vs. actual path.
 6. Progress is logged to the terminal and `/task_log` throughout.
 
 ---
@@ -151,7 +151,7 @@ WAIT (for sensors) → EXPLORE (follow 40 waypoints through both rooms) → DONE
 The robot sweeps Room 1, transits through the doorway, sweeps Room 2,
 then returns to its start position. Odometry stats and room-visit status
 are logged to the `/task_log` topic and the terminal throughout.
-On completion an exploration path map is saved to `~/exploration_path.png`.
+On completion an exploration path map is saved to `output/exploration_path.png`.
 
 ## Demo video
 

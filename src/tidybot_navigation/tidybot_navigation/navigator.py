@@ -302,7 +302,9 @@ class TidybotNavigator(Node):
         ax.legend(loc='upper left', fontsize=8)
         plt.tight_layout()
 
-        out = os.path.expanduser('~/exploration_path.png')
+        out_dir = os.path.join(os.getcwd(), 'output')
+        os.makedirs(out_dir, exist_ok=True)
+        out = os.path.join(out_dir, 'exploration_path.png')
         plt.savefig(out, dpi=150)
         plt.close(fig)
         self.get_logger().info(f'Path map saved: {out}')
