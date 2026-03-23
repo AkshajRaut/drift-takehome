@@ -77,7 +77,7 @@ waypoint tour through both rooms and returns to the start position.
 1. **Gazebo** opens with the two-room home world.
 2. TidyBot spawns in **Room 1 (Living Room)** at position `(1, 0)`.
 3. The green collection box is visible in the north-west of Room 1.
-4. The robot follows 40 collision-free waypoints: sweeps Room 1 →
+4. The robot follows 41 collision-free waypoints: sweeps Room 1 →
    passes through the doorway → sweeps Room 2 (Bedroom) → returns
    to the start position in Room 1.
 5. On completion an **exploration path map** is saved to

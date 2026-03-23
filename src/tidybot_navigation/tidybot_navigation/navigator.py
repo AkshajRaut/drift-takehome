@@ -30,18 +30,20 @@ TOUR_WPS = [
     (3.0, -2.5),    # south centre
     (5.5, -2.5),    # SE corner
     (5.5, -0.5),    # up east wall
-    # North: table/couch gap then above shelf
-    (3.5,  1.4),    # north gap east
-    (3.5,  2.2),    # above shelf line
-    (5.0,  2.2),    # sweep above shelf to east
-    (3.5,  2.2),    # back
-    (3.5,  1.4),    # down to gap
-    (1.3,  1.4),    # north gap west
+    (5.5,  0.8),    # north (south of shelf y=1.3)
+    # North sweep via corridor between table (x≤3.1) and shelf (x≥4.4)
+    (3.8,  0.8),    # west into table-shelf corridor
+    (3.8,  2.5),    # north through corridor (above shelf+couch)
+    (5.5,  2.5),    # east sweep above shelf
+    (3.8,  2.5),    # back to corridor
+    (3.8,  0.8),    # south through corridor
+    (3.8, -0.5),    # south below table (y < -0.25 safe)
+    (1.0, -0.5),    # west (clear of table)
     (0.5,  1.0),    # NW (below collection box)
     # === Transit to Bedroom ===
     (0.5,  0.0),    # south along west wall
-    (2.0,  0.0),    # east (above cube3 zone)
-    (2.0, -0.5),    # drop below table
+    (0.5, -0.5),    # SW (clear table_r1 south edge)
+    (3.0, -0.5),    # east below table
     (5.5, -0.5),    # east lane
     (5.5,  0.0),    # doorway approach
     (6.5,  0.0),    # through doorway centre
@@ -65,8 +67,8 @@ TOUR_WPS = [
     (6.5,  0.0),    # up to doorway
     (5.5,  0.0),    # through doorway
     (5.5, -0.5),    # south (table blocks y=0 transit)
-    (2.0, -0.5),    # west
-    (2.0,  0.0),    # up
+    (3.0, -0.5),    # west below table
+    (1.0, -0.5),    # continue west (clear table_r1)
     (1.0,  0.0),    # home
 ]
 
@@ -255,7 +257,7 @@ class TidybotNavigator(Node):
 
         # Furniture
         furniture = [
-            ('Table', 3.0, 0.5, 1.2, 0.8, '#8B6914'),
+            ('Table', 2.5, 0.5, 1.2, 0.8, '#8B6914'),
             ('Chair A', 2.1, -1.5, 0.45, 0.45, '#6B4226'),
             ('Chair B', 3.9, -1.5, 0.45, 0.45, '#6B4226'),
             ('Couch', 2.0, 2.35, 1.8, 0.7, '#4444AA'),
