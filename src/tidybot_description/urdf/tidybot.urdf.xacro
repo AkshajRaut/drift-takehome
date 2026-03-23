@@ -1,0 +1,636 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="tidybot">
+
+  <!-- ============================================================
+       TidyBot — Custom 4-wheeled home-tidying robot
+       Base: skid-steer, 0.5m wide
+       Torso: vertical, with 3-DOF right arm + cosmetic left arm
+       Sensors: forward camera (torso), 360° LiDAR (base), IMU
+  ============================================================ -->
+
+  <xacro:property name="PI" value="3.14159265359"/>
+
+  <!-- ── Base ── -->
+  <xacro:property name="base_length"  value="0.50"/>
+  <xacro:property name="base_width"   value="0.55"/>
+  <xacro:property name="base_height"  value="0.15"/>
+  <xacro:property name="base_mass"    value="30.0"/>
+
+  <!-- ── Wheels ── -->
+  <xacro:property name="wheel_radius" value="0.10"/>
+  <xacro:property name="wheel_width"  value="0.05"/>
+  <xacro:property name="wheel_mass"   value="0.5"/>
+  <!-- wheel joints placed at outer edge of base -->
+  <xacro:property name="wheel_x_front" value="0.15"/>
+  <xacro:property name="wheel_x_rear"  value="-0.15"/>
+  <xacro:property name="wheel_y"       value="0.30"/>
+
+  <!-- ── Torso ── -->
+  <xacro:property name="torso_width"  value="0.28"/>
+  <xacro:property name="torso_depth"  value="0.20"/>
+  <xacro:property name="torso_height" value="0.55"/>
+  <xacro:property name="torso_mass"   value="5.0"/>
+
+  <!-- ── Right arm segments ── -->
+  <xacro:property name="ua_len"   value="0.25"/>
+  <xacro:property name="ua_w"     value="0.07"/>
+  <xacro:property name="ua_mass"  value="1.0"/>
+
+  <xacro:property name="fa_len"   value="0.22"/>
+  <xacro:property name="fa_w"     value="0.06"/>
+  <xacro:property name="fa_mass"  value="0.7"/>
+
+  <xacro:property name="hand_len"  value="0.12"/>
+  <xacro:property name="hand_w"    value="0.05"/>
+  <xacro:property name="hand_mass" value="0.25"/>
+
+  <!-- ============================================================
+       INERTIA MACROS  (physically plausible)
+  ============================================================ -->
+  <xacro:macro name="box_inertia" params="m x y z">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia
+        ixx="${m/12.0*(y*y + z*z)}" ixy="0" ixz="0"
+        iyy="${m/12.0*(x*x + z*z)}" iyz="0"
+        izz="${m/12.0*(x*x + y*y)}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="cylinder_inertia" params="m r h">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia
+        ixx="${m/12.0*(3.0*r*r + h*h)}" ixy="0" ixz="0"
+        iyy="${m/12.0*(3.0*r*r + h*h)}" iyz="0"
+        izz="${m/2.0*r*r}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ============================================================
+       BASE
+  ============================================================ -->
+  <!-- base_footprint sits on the ground; base_link is at wheel-centre height -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <xacro:box_inertia m="${base_mass}" x="${base_length}" y="${base_width}" z="${base_height}"/>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="${base_length} ${base_width} ${base_height}"/></geometry>
+      <material name="dark_grey"><color rgba="0.22 0.22 0.22 1.0"/></material>
+    </visual>
+    <!-- Collision cylinder covers entire robot footprint for smooth
+         contact response at all angles (avoids box-corner blow-ups). -->
+    <collision name="base_bumper">
+      <origin xyz="0 0 0.30" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.35" length="0.80"/></geometry>
+    </collision>
+  </link>
+
+  <!-- ============================================================
+       WHEELS  (macro instantiated 4×)
+  ============================================================ -->
+  <xacro:macro name="wheel" params="name x_pos y_pos">
+
+    <link name="${name}">
+      <xacro:cylinder_inertia m="${wheel_mass}" r="${wheel_radius}" h="${wheel_width}"/>
+      <visual>
+        <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <material name="black"><color rgba="0.08 0.08 0.08 1.0"/></material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      </collision>
+    </link>
+
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${name}"/>
+      <origin xyz="${x_pos} ${y_pos} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="1.0" friction="0.5"/>
+      <limit effort="30.0" velocity="15.0"/>
+    </joint>
+
+    <gazebo reference="${name}">
+      <mu1>1.5</mu1>
+      <mu2>1.5</mu2>
+      <kp>100000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.002</minDepth>
+      <maxVel>2.0</maxVel>
+      <fdir1>1 0 0</fdir1>
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+  </xacro:macro>
+
+  <xacro:wheel name="wheel_front_left"  x_pos="${wheel_x_front}" y_pos=" ${wheel_y}"/>
+  <xacro:wheel name="wheel_front_right" x_pos="${wheel_x_front}" y_pos="-${wheel_y}"/>
+  <xacro:wheel name="wheel_rear_left"   x_pos="${wheel_x_rear}"  y_pos=" ${wheel_y}"/>
+  <xacro:wheel name="wheel_rear_right"  x_pos="${wheel_x_rear}"  y_pos="-${wheel_y}"/>
+
+  <!-- ============================================================
+       TORSO
+  ============================================================ -->
+  <joint name="torso_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="torso_link"/>
+    <!-- torso bottom sits on top of base -->
+    <origin xyz="0 0 ${base_height/2}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="torso_link">
+    <xacro:box_inertia m="${torso_mass}" x="${torso_depth}" y="${torso_width}" z="${torso_height}"/>
+    <!-- visual/collision origin at centre of torso box -->
+    <visual>
+      <origin xyz="0 0 ${torso_height/2}" rpy="0 0 0"/>
+      <geometry><box size="${torso_depth} ${torso_width} ${torso_height}"/></geometry>
+      <material name="light_grey"><color rgba="0.72 0.72 0.72 1.0"/></material>
+    </visual>
+    <!-- No separate torso collision — base_link cylinder covers the full body -->
+  </link>
+
+  <!-- ============================================================
+       HEAD / FACE PANEL  (LED display, visual only)
+  ============================================================ -->
+  <joint name="face_joint" type="fixed">
+    <parent link="torso_link"/>
+    <child  link="face_link"/>
+    <!-- on the front face, near the top of the torso -->
+    <origin xyz="${torso_depth/2 + 0.011} 0 ${torso_height - 0.07}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="face_link">
+    <inertial>
+      <mass value="0.08"/>
+      <inertia ixx="0.00005" ixy="0" ixz="0" iyy="0.00005" iyz="0" izz="0.00005"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <!-- flat rectangular LED panel: 22cm wide, 12cm tall, 2cm deep -->
+      <geometry><box size="0.022 0.22 0.12"/></geometry>
+      <material name="led_cyan"><color rgba="0.0 0.8 1.0 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.022 0.22 0.12"/></geometry>
+    </collision>
+  </link>
+
+  <!-- ============================================================
+       CAMERA  (torso-mounted, forward-facing)
+  ============================================================ -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="torso_link"/>
+    <child  link="camera_link"/>
+    <!-- front of torso, 60 % up the torso height -->
+    <origin xyz="${torso_depth/2} 0 ${torso_height*0.60}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_link">
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.04 0.10 0.04"/></geometry>
+      <material name="cam_black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.04 0.10 0.04"/></geometry>
+    </collision>
+  </link>
+
+  <!-- optical frame (z forward, x right, y down) -->
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child  link="camera_optical_link"/>
+    <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}"/>
+  </joint>
+  <link name="camera_optical_link">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="0.0000001" ixy="0" ixz="0" iyy="0.0000001" iyz="0" izz="0.0000001"/>
+    </inertial>
+  </link>
+
+  <!-- ============================================================
+       LIDAR  (360°, base-mounted, on top of torso)
+  ============================================================ -->
+  <joint name="lidar_joint" type="fixed">
+    <parent link="torso_link"/>
+    <child  link="lidar_link"/>
+    <origin xyz="0 0 ${torso_height + 0.04}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="lidar_link">
+    <inertial>
+      <mass value="0.12"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="0.06"/></geometry>
+      <material name="lidar_blk"><color rgba="0.1 0.1 0.1 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="0.06"/></geometry>
+    </collision>
+  </link>
+
+  <!-- ============================================================
+       IMU  (base-mounted)
+  ============================================================ -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <!-- ============================================================
+       RIGHT ARM — 3-DOF FUNCTIONAL (shoulder / elbow / wrist)
+       Arm hangs on the right side of the torso.
+       All 3 joints are revolute about Y (pitch in XZ plane).
+       Joint frames are pre-rotated so joint=0 → arm tucked against
+       torso (no ground penetration on spawn).
+       Offsets: shoulder -0.5 rad, elbow -2.5 rad about Y.
+       At joint=0 the upper arm hangs mostly down, forearm folds UP
+       alongside it (classic tucked pose).
+  ============================================================ -->
+
+  <!-- Shoulder joint (pre-rotated -0.5 rad) -->
+  <joint name="shoulder_right_joint" type="revolute">
+    <parent link="torso_link"/>
+    <child  link="upper_arm_right"/>
+    <!-- right side of torso at 65 % height -->
+    <origin xyz="0.02 ${-(torso_width/2 + ua_w/2 + 0.01)} ${torso_height*0.65}" rpy="0 -0.5 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-PI/2}" upper="${PI}" effort="60.0" velocity="2.0"/>
+    <dynamics damping="50.0" friction="5.0"/>
+  </joint>
+
+  <link name="upper_arm_right">
+    <xacro:box_inertia m="${ua_mass}" x="${ua_w}" y="${ua_w}" z="${ua_len}"/>
+    <visual>
+      <origin xyz="0 0 ${-ua_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${ua_w} ${ua_w} ${ua_len}"/></geometry>
+      <material name="arm_grey"><color rgba="0.50 0.50 0.50 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-ua_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${ua_w} ${ua_w} ${ua_len}"/></geometry>
+    </collision>
+  </link>
+
+  <!-- Elbow joint (pre-rotated -2.5 rad so joint=0 folds forearm UP) -->
+  <joint name="elbow_right_joint" type="revolute">
+    <parent link="upper_arm_right"/>
+    <child  link="forearm_right"/>
+    <origin xyz="0 0 ${-ua_len}" rpy="0 -2.5 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-PI}" upper="${PI}" effort="40.0" velocity="2.5"/>
+    <dynamics damping="50.0" friction="5.0"/>
+  </joint>
+
+  <link name="forearm_right">
+    <xacro:box_inertia m="${fa_mass}" x="${fa_w}" y="${fa_w}" z="${fa_len}"/>
+    <visual>
+      <origin xyz="0 0 ${-fa_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${fa_w} ${fa_w} ${fa_len}"/></geometry>
+      <material name="arm_grey"><color rgba="0.50 0.50 0.50 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-fa_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${fa_w} ${fa_w} ${fa_len}"/></geometry>
+    </collision>
+  </link>
+
+  <!-- Wrist joint -->
+  <joint name="wrist_right_joint" type="revolute">
+    <parent link="forearm_right"/>
+    <child  link="hand_right"/>
+    <origin xyz="0 0 ${-fa_len}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="${-PI/2}" upper="${PI/2}" effort="20.0" velocity="3.0"/>
+    <dynamics damping="30.0" friction="3.0"/>
+  </joint>
+
+  <link name="hand_right">
+    <xacro:box_inertia m="${hand_mass}" x="${hand_w}" y="${hand_w}" z="${hand_len}"/>
+    <visual>
+      <origin xyz="0 0 ${-hand_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${hand_w} ${hand_w} ${hand_len}"/></geometry>
+      <material name="orange"><color rgba="1.0 0.50 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-hand_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${hand_w} ${hand_w} ${hand_len}"/></geometry>
+    </collision>
+  </link>
+
+  <!-- Gripper / scoop (magnetic end-effector modeled as flat scoop) -->
+  <joint name="gripper_right_joint" type="fixed">
+    <parent link="hand_right"/>
+    <child  link="gripper_right"/>
+    <origin xyz="0 0 ${-hand_len}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="gripper_right">
+    <inertial>
+      <mass value="0.12"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <!-- wide flat scoop plate -->
+      <geometry><box size="0.12 0.10 0.02"/></geometry>
+      <material name="orange"><color rgba="1.0 0.50 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.10 0.02"/></geometry>
+    </collision>
+  </link>
+
+  <!-- ============================================================
+       LEFT ARM — COSMETIC (static / fixed joints)
+       Mirrored on the left side of the torso, same tucked pose as
+       right arm at rest.  Same colors and gripper for symmetry.
+  ============================================================ -->
+  <joint name="shoulder_left_joint" type="fixed">
+    <parent link="torso_link"/>
+    <child  link="upper_arm_left"/>
+    <origin xyz="0.02 ${torso_width/2 + ua_w/2 + 0.01} ${torso_height*0.65}" rpy="0 -0.5 0"/>
+  </joint>
+
+  <link name="upper_arm_left">
+    <xacro:box_inertia m="0.05" x="${ua_w}" y="${ua_w}" z="${ua_len}"/>
+    <visual>
+      <origin xyz="0 0 ${-ua_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${ua_w} ${ua_w} ${ua_len}"/></geometry>
+      <material name="arm_grey"><color rgba="0.50 0.50 0.50 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-ua_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${ua_w} ${ua_w} ${ua_len}"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="elbow_left_joint" type="fixed">
+    <parent link="upper_arm_left"/>
+    <child  link="forearm_left"/>
+    <origin xyz="0 0 ${-ua_len}" rpy="0 -2.5 0"/>
+  </joint>
+
+  <link name="forearm_left">
+    <xacro:box_inertia m="0.03" x="${fa_w}" y="${fa_w}" z="${fa_len}"/>
+    <visual>
+      <origin xyz="0 0 ${-fa_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${fa_w} ${fa_w} ${fa_len}"/></geometry>
+      <material name="arm_grey"><color rgba="0.50 0.50 0.50 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-fa_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${fa_w} ${fa_w} ${fa_len}"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="wrist_left_joint" type="fixed">
+    <parent link="forearm_left"/>
+    <child  link="hand_left"/>
+    <origin xyz="0 0 ${-fa_len}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="hand_left">
+    <xacro:box_inertia m="0.02" x="${hand_w}" y="${hand_w}" z="${hand_len}"/>
+    <visual>
+      <origin xyz="0 0 ${-hand_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${hand_w} ${hand_w} ${hand_len}"/></geometry>
+      <material name="orange"><color rgba="1.0 0.50 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${-hand_len/2}" rpy="0 0 0"/>
+      <geometry><box size="${hand_w} ${hand_w} ${hand_len}"/></geometry>
+    </collision>
+  </link>
+
+  <!-- Left gripper (cosmetic, mirrors right) -->
+  <joint name="gripper_left_joint" type="fixed">
+    <parent link="hand_left"/>
+    <child  link="gripper_left"/>
+    <origin xyz="0 0 ${-hand_len}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="gripper_left">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.10 0.02"/></geometry>
+      <material name="orange"><color rgba="1.0 0.50 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.10 0.02"/></geometry>
+    </collision>
+  </link>
+
+  <!-- ============================================================
+       GAZEBO PLUGINS
+  ============================================================ -->
+
+  <!-- Planar move plugin — directly applies cmd_vel to the base.
+       No wheel PID, so it can't get stuck after collisions. -->
+  <gazebo>
+    <plugin name="gazebo_ros_planar_move" filename="libgazebo_ros_planar_move.so">
+      <update_rate>50</update_rate>
+      <command_topic>cmd_vel</command_topic>
+      <odometry_topic>odom</odometry_topic>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint state publisher (arm joints → /joint_states) -->
+  <gazebo>
+    <plugin name="gazebo_ros_joint_state_publisher"
+            filename="libgazebo_ros_joint_state_publisher.so">
+      <update_rate>50</update_rate>
+      <joint_name>shoulder_right_joint</joint_name>
+      <joint_name>elbow_right_joint</joint_name>
+      <joint_name>wrist_right_joint</joint_name>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint trajectory controller for right arm position control -->
+  <gazebo>
+    <plugin name="gazebo_ros_joint_pose_trajectory"
+            filename="libgazebo_ros_joint_pose_trajectory.so">
+      <ros>
+        <remapping>set_joint_trajectory:=set_joint_trajectory</remapping>
+      </ros>
+      <update_rate>50</update_rate>
+      <frame_id>base_footprint</frame_id>
+    </plugin>
+  </gazebo>
+
+  <!-- Forward camera on torso -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="front_camera">
+      <always_on>true</always_on>
+      <update_rate>10.0</update_rate>
+      <camera name="front_camera">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip><near>0.02</near><far>50.0</far></clip>
+        <noise><type>gaussian</type><mean>0.0</mean><stddev>0.007</stddev></noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <ros>
+          <remapping>image_raw:=camera/image_raw</remapping>
+          <remapping>camera_info:=camera/camera_info</remapping>
+        </ros>
+        <camera_name>front_camera</camera_name>
+        <frame_name>camera_optical_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- 360° LiDAR on base -->
+  <gazebo reference="lidar_link">
+    <sensor type="ray" name="lidar_sensor">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10.0</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1.0</resolution>
+            <min_angle>${-PI}</min_angle>
+            <max_angle>${PI}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise><type>gaussian</type><mean>0.0</mean><stddev>0.01</stddev></noise>
+      </ray>
+      <plugin name="lidar_controller" filename="libgazebo_ros_ray_sensor.so">
+        <ros><remapping>~/out:=scan</remapping></ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>lidar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU on base -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100.0</update_rate>
+      <plugin name="imu_controller" filename="libgazebo_ros_imu_sensor.so">
+        <ros><remapping>~/out:=imu</remapping></ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Vacuum gripper on the right hand (suction-based pick-and-place) -->
+  <gazebo>
+    <plugin name="vacuum_gripper" filename="libgazebo_ros_vacuum_gripper.so">
+      <ros>
+        <namespace>/vacuum</namespace>
+      </ros>
+      <link_name>hand_right</link_name>
+      <max_distance>3.0</max_distance>
+      <!-- Do NOT attract furniture, walls, floor, or the collection box -->
+      <fixed>ground_plane</fixed>
+      <fixed>wall_west</fixed>
+      <fixed>wall_north_r1</fixed>
+      <fixed>wall_south_r1</fixed>
+      <fixed>shared_wall_south</fixed>
+      <fixed>shared_wall_north</fixed>
+      <fixed>door_lintel</fixed>
+      <fixed>wall_east</fixed>
+      <fixed>wall_north_r2</fixed>
+      <fixed>wall_south_r2</fixed>
+      <fixed>table_r1</fixed>
+      <fixed>chair_r1_a</fixed>
+      <fixed>chair_r1_b</fixed>
+      <fixed>couch_r1</fixed>
+      <fixed>shelf_r1</fixed>
+      <fixed>bed_r2</fixed>
+      <fixed>nightstand_r2</fixed>
+      <fixed>wardrobe_r2</fixed>
+      <fixed>desk_r2</fixed>
+      <fixed>chair_r2</fixed>
+      <fixed>box_floor</fixed>
+      <fixed>box_back</fixed>
+      <fixed>box_front</fixed>
+      <fixed>box_left</fixed>
+      <fixed>box_right</fixed>
+    </plugin>
+  </gazebo>
+
+  <!-- ============================================================
+       CONTACT PROPERTIES — prevent solver blow-up on collision
+  ============================================================ -->
+  <xacro:macro name="safe_contact" params="link_name">
+    <gazebo reference="${link_name}">
+      <kp>100000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.002</minDepth>
+      <maxVel>2.0</maxVel>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:safe_contact link_name="base_link"/>
+  <xacro:safe_contact link_name="torso_link"/>
+  <xacro:safe_contact link_name="face_link"/>
+  <xacro:safe_contact link_name="upper_arm_right"/>
+  <xacro:safe_contact link_name="forearm_right"/>
+  <xacro:safe_contact link_name="hand_right"/>
+  <xacro:safe_contact link_name="gripper_right"/>
+  <xacro:safe_contact link_name="upper_arm_left"/>
+  <xacro:safe_contact link_name="forearm_left"/>
+  <xacro:safe_contact link_name="hand_left"/>
+  <xacro:safe_contact link_name="gripper_left"/>
+
+  <!-- Material overrides for Gazebo renderer -->
+  <gazebo reference="base_link">  <material>Gazebo/DarkGrey</material></gazebo>
+  <gazebo reference="torso_link"> <material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="face_link">  <material>Gazebo/Blue</material></gazebo>
+  <gazebo reference="lidar_link"> <material>Gazebo/Black</material></gazebo>
+
+</robot>
