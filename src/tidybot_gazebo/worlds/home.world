@@ -272,7 +272,7 @@
     </link>
   </model>
 
-  <!-- Bookshelf (0.8 × 0.3 × 1.8 m) — west wall room 1 -->
+  <!-- Bookshelf (0.8 × 0.4 × 1.8 m) — east side room 1 -->
   <model name="shelf_r1">
     <static>true</static>
     <pose>4.8 1.5 0.9 0 0 0</pose>
@@ -354,7 +354,7 @@
   </model>
 
   <!-- ══════════════════════════════════════════════════════════
-       COLLECTION BOX  (open-top, near robot start at (1.0, 2.2))
+       COLLECTION BOX  (open-top, near robot start at (0.5, 2.0))
        Inner dims: 0.6 × 0.6 × 0.3 m
   ══════════════════════════════════════════════════════════ -->
 
@@ -451,7 +451,7 @@
     </link>
   </model>
 
-  <!-- cube2 — red cube (Room 1, east side path) -->
+  <!-- cube2 — red cube (Room 2, east side path) -->
   <model name="cube2">
     <pose>10.5 2.2 0.04 0 0 0</pose>
     <link name="link">

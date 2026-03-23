@@ -3,7 +3,7 @@
 
   <!-- ============================================================
        TidyBot — Custom 4-wheeled home-tidying robot
-       Base: skid-steer, 0.5m wide
+       Base: skid-steer, 0.55m wide
        Torso: vertical, with 3-DOF right arm + cosmetic left arm
        Sensors: forward camera (torso), 360° LiDAR (base), IMU
   ============================================================ -->
@@ -227,7 +227,7 @@
   </link>
 
   <!-- ============================================================
-       LIDAR  (360°, base-mounted, on top of torso)
+       LIDAR  (360°, torso-mounted, on top of torso)
   ============================================================ -->
   <joint name="lidar_joint" type="fixed">
     <parent link="torso_link"/>
