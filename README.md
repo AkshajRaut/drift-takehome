@@ -1,12 +1,12 @@
 # TidyBot — Drift Take-Home Simulation
 
-A complete ROS 2 + Gazebo Classic simulation of a home-tidying robot.
-The robot navigates a two-room home, locates scattered objects, picks them
-up, and returns them to a collection box.
+A ROS 2 + Gazebo Classic simulation of a home-tidying robot.
+The robot autonomously navigates a two-room home environment,
+exploring both rooms via collision-free waypoints.
 
 ---
 
-## Environment
+## Prerequisites
 
 | Component | Version |
 |-----------|---------|
@@ -17,25 +17,52 @@ up, and returns them to a collection box.
 
 ---
 
-## Quick-start (single command)
+## Setup (from a clean install)
+
+### 1. Source ROS 2
 
 ```bash
-# 1. Install system dependencies (only needed once)
-sudo apt-get install -y gazebo gazebo-plugin-base \
-  ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros \
-  ros-humble-gazebo-plugins ros-humble-gazebo-msgs \
-  ros-humble-xacro ros-humble-joint-state-publisher \
-  ros-humble-joint-state-publisher-gui
-
-# 2. Source ROS 2
 source /opt/ros/humble/setup.bash
+```
 
-# 3. Build
+### 2. Install system dependencies
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+  gazebo \
+  gazebo-plugin-base \
+  ros-humble-gazebo-ros-pkgs \
+  ros-humble-gazebo-ros \
+  ros-humble-gazebo-plugins \
+  ros-humble-gazebo-msgs \
+  ros-humble-xacro \
+  ros-humble-robot-state-publisher \
+  ros-humble-joint-state-publisher \
+  ros-humble-joint-state-publisher-gui \
+  python3-matplotlib
+```
+
+### 3. Install Python dependencies
+
+```bash
+pip3 install -r requirements.txt
+```
+
+> `requirements.txt` contains only `matplotlib` (used for the exploration
+> path map). All other Python dependencies ship with `ros-humble-desktop`.
+
+### 4. Build
+
+```bash
 cd ~/drift-takehome
 colcon build --symlink-install
 source install/setup.bash
+```
 
-# 4. Launch everything
+### 5. Launch
+
+```bash
 ros2 launch tidybot_gazebo tidybot_full.launch.py
 ```
 
@@ -153,31 +180,44 @@ then returns to its start position. Odometry stats and room-visit status
 are logged to the `/task_log` topic and the terminal throughout.
 On completion an exploration path map is saved to `output/exploration_path.png`.
 
-## Demo video
-
-> *(screen recording — record with `kazam` or `simplescreenrecorder` while simulation runs)*
-
 ---
 
 ## Dependencies
 
-All ROS 2 Humble + system packages:
+### System (apt)
+
+```bash
+sudo apt-get install -y \
+  gazebo \
+  gazebo-plugin-base \
+  ros-humble-gazebo-ros-pkgs \
+  ros-humble-gazebo-ros \
+  ros-humble-gazebo-plugins \
+  ros-humble-gazebo-msgs \
+  ros-humble-xacro \
+  ros-humble-robot-state-publisher \
+  ros-humble-joint-state-publisher \
+  ros-humble-joint-state-publisher-gui \
+  python3-matplotlib
+```
+
+### Python (pip)
+
+See `requirements.txt`:
 
 ```
-gazebo
-gazebo-plugin-base
-ros-humble-gazebo-ros-pkgs
-ros-humble-gazebo-ros
-ros-humble-gazebo-plugins
-ros-humble-gazebo-msgs
-ros-humble-xacro
-ros-humble-joint-state-publisher
-ros-humble-joint-state-publisher-gui
-ros-humble-robot-state-publisher   (installed with ros-humble-desktop)
-ros-humble-tf2-ros                 (installed with ros-humble-desktop)
+matplotlib
 ```
 
-Python packages beyond ROS 2 defaults: **none**.
+All other Python packages (`rclpy`, `geometry_msgs`, `nav_msgs`, `sensor_msgs`,
+`std_msgs`, `std_srvs`, `gazebo_msgs`, `trajectory_msgs`, `builtin_interfaces`)
+are provided by the ROS 2 desktop install.
+
+---
+
+## Demo video
+
+> *(screen recording — record with `kazam` or `simplescreenrecorder` while simulation runs)*
 
 ---
 

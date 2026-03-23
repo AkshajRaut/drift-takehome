@@ -13,6 +13,8 @@ DEVLOG.md
 
 # Docs
 *.pdf
-requirements.txt
 docs/
-.png
+*.png
+
+# Generated output
+output/
