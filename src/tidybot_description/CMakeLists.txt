@@ -3,7 +3,7 @@ project(tidybot_description)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY urdf launch config
+install(DIRECTORY urdf launch
   DESTINATION share/${PROJECT_NAME}
 )
 
