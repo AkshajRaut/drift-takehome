@@ -8,11 +8,18 @@
     <update_rate>50.0</update_rate>
   </plugin>
 
-  <!-- ── Default camera: top-down view of both rooms ── -->
+  <!-- ── Old isometric camera ──
   <gui fullscreen="0">
     <camera name="user_camera">
-      <!-- Isometric view from south-west, looking over both rooms -->
       <pose>7 -9 13 0 0.85 1.6</pose>
+    </camera>
+  </gui>
+  -->
+
+  <!-- ── Default camera: top-down view centered on scene ── -->
+  <gui fullscreen="0">
+    <camera name="user_camera">
+      <pose>5.5 0 18 0 1.5708 1.5708</pose>
     </camera>
   </gui>
 

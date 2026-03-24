@@ -24,7 +24,7 @@ from std_msgs.msg import String
 TOUR_WPS = [
     # === Living Room clockwise sweep ===
     (1.0,  0.0),    # start
-    (0.5,  0.0),    # west
+    # (0.5,  0.0),    # west
     (0.5, -1.0),    # SW direction
     (0.5, -2.5),    # SW corner
     (3.0, -2.5),    # south centre
@@ -38,18 +38,13 @@ TOUR_WPS = [
     (3.8,  2.5),    # back to corridor
     (3.8,  0.8),    # south through corridor
     (3.8, -0.5),    # south below table (y < -0.25 safe)
-    (1.0, -0.5),    # west (clear of table)
-    (0.5,  1.0),    # NW (below collection box)
     # === Transit to Bedroom ===
-    (0.5,  0.0),    # south along west wall
-    (0.5, -0.5),    # SW (clear table_r1 south edge)
-    (3.0, -0.5),    # east below table
     (5.5, -0.5),    # east lane
     (5.5,  0.0),    # doorway approach
     (6.5,  0.0),    # through doorway centre
     # === Bedroom south sweep ===
-    (6.5, -1.0),    # south (below cube5/chair_r2)
-    (8.0, -1.0),    # mid
+    (7.5, -1.0),    # south (below cube5/chair_r2)
+    (8.0, -0.5),    # mid
     (8.5, -0.5),    # east of desk zone
     (8.5, -2.5),    # south
     (10.5, -2.5),   # SE corner
@@ -60,10 +55,8 @@ TOUR_WPS = [
     (7.5,  2.5),    # NW bedroom (above nightstand & bed)
     (10.5,  2.5),   # NE bedroom (closer to east wall)
     (7.5,  2.5),    # back west
-    (7.8,  0.0),    # back down
+    (7.8,  -0.5),    # back down
     # === Return to Living Room ===
-    (7.8, -1.0),    # south
-    (6.5, -1.0),    # west
     (6.5,  0.0),    # up to doorway
     (5.5,  0.0),    # through doorway
     (5.5, -0.5),    # south (table blocks y=0 transit)

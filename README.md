@@ -77,7 +77,7 @@ waypoint tour through both rooms and returns to the start position.
 1. **Gazebo** opens with the two-room home world.
 2. TidyBot spawns in **Room 1 (Living Room)** at position `(1, 0)`.
 3. The green collection box is visible in the north-west of Room 1.
-4. The robot follows 41 collision-free waypoints: sweeps Room 1 →
+4. The robot follows 34 collision-free waypoints: sweeps Room 1 →
    passes through the doorway → sweeps Room 2 (Bedroom) → returns
    to the start position in Room 1.
 5. On completion an **exploration path map** is saved to
@@ -172,7 +172,7 @@ src/
 The navigator runs a three-phase state machine:
 
 ```
-WAIT (for sensors) → EXPLORE (follow 40 waypoints through both rooms) → DONE
+WAIT (for sensors) → EXPLORE (follow 34 waypoints through both rooms) → DONE
 ```
 
 The robot sweeps Room 1, transits through the doorway, sweeps Room 2,
@@ -217,7 +217,7 @@ are provided by the ROS 2 desktop install.
 
 ## Demo video
 
-> *(screen recording — record with `kazam` or `simplescreenrecorder` while simulation runs)*
+[Watch the demo on Google Drive](https://drive.google.com/file/d/1nFQh9QT_LLuQvHvjfMqnPaOgjO6STm1N/view?usp=sharing)
 
 ---
 
