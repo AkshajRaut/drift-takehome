@@ -4,6 +4,8 @@ A ROS 2 + Gazebo Classic simulation of a home-tidying robot.
 The robot autonomously navigates a two-room home environment,
 exploring both rooms via collision-free waypoints.
 
+[Watch the demo on Google Drive](https://drive.google.com/file/d/1nFQh9QT_LLuQvHvjfMqnPaOgjO6STm1N/view?usp=sharing)
+
 ---
 
 ## Prerequisites
@@ -179,45 +181,6 @@ The robot sweeps Room 1, transits through the doorway, sweeps Room 2,
 then returns to its start position. Odometry stats and room-visit status
 are logged to the `/task_log` topic and the terminal throughout.
 On completion an exploration path map is saved to `output/exploration_path.png`.
-
----
-
-## Dependencies
-
-### System (apt)
-
-```bash
-sudo apt-get install -y \
-  gazebo \
-  gazebo-plugin-base \
-  ros-humble-gazebo-ros-pkgs \
-  ros-humble-gazebo-ros \
-  ros-humble-gazebo-plugins \
-  ros-humble-gazebo-msgs \
-  ros-humble-xacro \
-  ros-humble-robot-state-publisher \
-  ros-humble-joint-state-publisher \
-  ros-humble-joint-state-publisher-gui \
-  python3-matplotlib
-```
-
-### Python (pip)
-
-See `requirements.txt`:
-
-```
-matplotlib
-```
-
-All other Python packages (`rclpy`, `geometry_msgs`, `nav_msgs`, `sensor_msgs`,
-`std_msgs`, `std_srvs`, `gazebo_msgs`, `trajectory_msgs`, `builtin_interfaces`)
-are provided by the ROS 2 desktop install.
-
----
-
-## Demo video
-
-[Watch the demo on Google Drive](https://drive.google.com/file/d/1nFQh9QT_LLuQvHvjfMqnPaOgjO6STm1N/view?usp=sharing)
 
 ---
 
