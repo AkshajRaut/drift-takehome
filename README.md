@@ -48,7 +48,7 @@ sudo apt-get install -y \
 ### 3. Build
 
 ```bash
-cd ~/drift-takehome
+cd drift-takehome
 colcon build --symlink-install
 source install/setup.bash
 ```
