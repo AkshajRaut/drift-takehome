@@ -45,16 +45,7 @@ sudo apt-get install -y \
   python3-matplotlib
 ```
 
-### 3. Install Python dependencies
-
-```bash
-pip3 install -r requirements.txt
-```
-
-> `requirements.txt` contains only `matplotlib` (used for the exploration
-> path map). All other Python dependencies ship with `ros-humble-desktop`.
-
-### 4. Build
+### 3. Build
 
 ```bash
 cd ~/drift-takehome
@@ -62,7 +53,7 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 5. Launch
+### 4. Launch
 
 ```bash
 ros2 launch tidybot_gazebo tidybot_full.launch.py
@@ -192,4 +183,4 @@ On completion an exploration path map is saved to `output/exploration_path.png`.
 | Robot falls through floor | Verify `gazebo-plugin-base` is installed |
 | `/scan` not publishing | Ensure `ros-humble-gazebo-plugins` is installed |
 | Arm doesn't move | Check `/set_joint_trajectory` topic is alive: `ros2 topic list` |
-| Path map not saved | Install `python3-matplotlib`: `pip3 install matplotlib` |
+| Path map not saved | Install `python3-matplotlib`: `sudo apt install python3-matplotlib` |
