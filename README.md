@@ -59,23 +59,28 @@ source install/setup.bash
 ros2 launch tidybot_gazebo tidybot_full.launch.py
 ```
 
-Gazebo opens, TidyBot spawns, and after ~8 seconds the navigation, arm,
-and gripper nodes start autonomously. The robot follows a collision-free
-waypoint tour through both rooms and returns to the start position.
+Gazebo and RViz open. TidyBot spawns after ~4 seconds, and after ~8 seconds
+the navigation, arm, gripper, and mapper nodes start autonomously. The robot
+follows a collision-free waypoint tour through both rooms while building a
+real-time LiDAR occupancy map visible in RViz.
 
 ---
 
 ## What you will see
 
 1. **Gazebo** opens with the two-room home world.
-2. TidyBot spawns in **Room 1 (Living Room)** at position `(1, 0)`.
-3. The green collection box is visible in the north-west of Room 1.
-4. The robot follows 34 collision-free waypoints: sweeps Room 1 →
+2. **RViz** opens fullscreen with a top-down occupancy map view.
+3. TidyBot spawns in **Room 1 (Living Room)** at position `(1, 0)`.
+4. The green collection box is visible in the north-west of Room 1.
+5. The robot follows 34 collision-free waypoints: sweeps Room 1 →
    passes through the doorway → sweeps Room 2 (Bedroom) → returns
    to the start position in Room 1.
-5. On completion an **exploration path map** is saved to
-   `output/exploration_path.png` showing planned vs. actual path.
-6. Progress is logged to the terminal and `/task_log` throughout.
+6. The **LiDAR mapper** builds an occupancy grid in real time, visible
+   in RViz as accumulated red scan points over a white/grey map.
+7. On completion, outputs are saved to `output/`:
+   - `exploration_path.png` — planned vs. actual path
+   - `lidar_map.png` — RViz screenshot of the final occupancy map
+8. Progress is logged to the terminal and `/task_log` throughout.
 
 ---
 
@@ -84,7 +89,8 @@ waypoint tour through both rooms and returns to the start position.
 | Topic | Type | Content |
 |-------|------|---------|
 | `/odom` | `nav_msgs/Odometry` | Robot odometry |
-| `/scan` | `sensor_msgs/LaserScan` | 360° LiDAR |
+| `/scan` | `sensor_msgs/LaserScan` | 360° LiDAR (720 rays, 8 m range) |
+| `/map` | `nav_msgs/OccupancyGrid` | Real-time occupancy grid from mapper |
 | `/camera/image_raw` | `sensor_msgs/Image` | Forward camera |
 | `/imu` | `sensor_msgs/Imu` | IMU data |
 | `/task_log` | `std_msgs/String` | Per-state progress log |
@@ -115,14 +121,16 @@ src/
 │   └── launch/display.launch.py
 ├── tidybot_gazebo/            # World + launch
 │   ├── worlds/home.world
+│   ├── config/mapping.rviz    # RViz top-down mapping config
 │   └── launch/
-│       ├── tidybot_world.launch.py   # world + spawn only
+│       ├── tidybot_world.launch.py   # world + spawn + RViz
 │       └── tidybot_full.launch.py    # ← single command
 └── tidybot_navigation/        # Behaviour nodes
     └── tidybot_navigation/
         ├── navigator.py       # waypoint-following explorer
         ├── arm_controller.py  # arm trajectory control
-        └── gripper.py         # vacuum gripper (grab/release)
+        ├── gripper.py         # magnetic gripper (grab/release)
+        └── mapper.py          # LiDAR occupancy grid mapper
 ```
 
 ---
@@ -139,7 +147,7 @@ src/
 | Cosmetic left arm | `upper_arm_left` + `forearm_left` + `hand_left` (fixed joints) |
 | LED face panel | `face_link` — flat cyan box on torso front |
 | Torso camera | `camera_link` on torso at 60 % height, publishes `/camera/image_raw` |
-| Additional sensor | 360° LiDAR (`lidar_link`, top of torso) + IMU (`imu_link`, base) |
+| Additional sensor | 360° LiDAR (`lidar_link`, torso-mounted, 720 rays, 8 m range) + IMU (`imu_link`, base) |
 | Physically plausible inertials | box/cylinder formulas — no identity matrices |
 
 ---
@@ -169,9 +177,11 @@ WAIT (for sensors) → EXPLORE (follow 34 waypoints through both rooms) → DONE
 ```
 
 The robot sweeps Room 1, transits through the doorway, sweeps Room 2,
-then returns to its start position. Odometry stats and room-visit status
-are logged to the `/task_log` topic and the terminal throughout.
-On completion an exploration path map is saved to `output/exploration_path.png`.
+then returns to its start position. The LiDAR mapper builds an occupancy
+grid throughout, published on `/map` and visualised in RViz. Odometry stats
+and room-visit status are logged to `/task_log` and the terminal.
+On completion, outputs are saved to `output/exploration_path.png` and
+`output/lidar_map.png`.
 
 ---
 
