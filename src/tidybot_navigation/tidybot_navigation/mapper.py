@@ -122,7 +122,7 @@ class TidybotMapper(Node):
         rc, rr = self._world_to_grid(rx, ry)
 
         angle = msg.angle_min
-        for i, r in enumerate(msg.ranges):
+        for r in msg.ranges:
             if msg.range_min < r < msg.range_max:
                 # Endpoint in world
                 beam_angle = ryaw + angle
@@ -176,49 +176,56 @@ class TidybotMapper(Node):
     # -- visualisation --------------------------------------------------
 
     def _save_map_png(self):
-        import subprocess
-        import re
+        """Save the occupancy grid as a PNG using the standard ROS map
+        colour scheme (matching nav2 map_saver output):
+        unknown = grey (205), free = white (254), occupied = black (0),
+        with linear interpolation for intermediate probabilities.
+        """
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
 
         out_dir = os.path.join(os.getcwd(), 'output')
         os.makedirs(out_dir, exist_ok=True)
         out = os.path.join(out_dir, 'lidar_map.png')
 
         try:
-            # Find RViz window via xwininfo (reliable on this system)
-            result = subprocess.run(
-                ['xwininfo', '-root', '-tree'],
-                capture_output=True, text=True, timeout=5)
+            prob = 1.0 / (1.0 + np.exp(-self.grid))
+            known = np.abs(self.grid) > 0.1
 
-            wid = None
-            for line in result.stdout.split('\n'):
-                if 'RViz' in line and 'mapping.rviz' in line:
-                    m = re.search(r'(0x[0-9a-fA-F]+)', line)
-                    if m:
-                        wid = m.group(1)
-                        break
+            # nav2 map_saver colour mapping:
+            # unknown → 205/255 ≈ 0.804 (grey)
+            # free (prob~0) → 254/255 ≈ 1.0 (white)
+            # occupied (prob~1) → 0/255 = 0.0 (black)
+            img = np.full(self.grid.shape, 205.0 / 255.0, dtype=np.float32)
+            img[known] = 1.0 - prob[known]  # free→white, occupied→black
 
-            if not wid:
-                self.get_logger().warn('Could not find RViz window — skip PNG')
+            # Crop to explored region
+            rows, cols = np.where(known)
+            if len(rows) == 0:
+                self.get_logger().warn('No explored cells — skip PNG')
                 return
+            pad = 20
+            r_min = max(rows.min() - pad, 0)
+            r_max = min(rows.max() + pad, GRID_H)
+            c_min = max(cols.min() - pad, 0)
+            c_max = min(cols.max() + pad, GRID_W)
+            cropped = img[r_min:r_max, c_min:c_max]
 
-            # Get window geometry
-            result = subprocess.run(
-                ['xwininfo', '-id', wid],
-                capture_output=True, text=True, timeout=5)
-            info = result.stdout
-            x = int(re.search(r'Absolute upper-left X:\s+(\d+)', info).group(1))
-            y = int(re.search(r'Absolute upper-left Y:\s+(\d+)', info).group(1))
-            w = int(re.search(r'Width:\s+(\d+)', info).group(1))
-            h = int(re.search(r'Height:\s+(\d+)', info).group(1))
-
-            # Capture with PIL
-            from PIL import ImageGrab
-            img = ImageGrab.grab(bbox=(x, y, x + w, y + h), xdisplay="")
-            img.save(out)
-            self.get_logger().info(f'RViz screenshot saved: {out}')
+            fig, ax = plt.subplots(1, 1, figsize=(12, 9))
+            ax.imshow(cropped, cmap='gray', vmin=0.0, vmax=1.0,
+                      origin='lower', interpolation='nearest')
+            ax.set_title('LiDAR Occupancy Grid Map')
+            ax.set_xlabel(f'cells ({RESOLUTION}m each)')
+            ax.set_ylabel(f'cells ({RESOLUTION}m each)')
+            ax.set_aspect('equal')
+            fig.tight_layout()
+            fig.savefig(out, dpi=150)
+            plt.close(fig)
+            self.get_logger().info(f'Occupancy map saved: {out}')
 
         except Exception as e:
-            self.get_logger().warn(f'Screenshot failed: {e}')
+            self.get_logger().warn(f'Map save failed: {e}')
 
 
 def main(args=None):
