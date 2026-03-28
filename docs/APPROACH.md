@@ -6,7 +6,7 @@
 I built the robot entirely from scratch in URDF/xacro — no existing models or meshes were used as a base. Every link dimension, mass, and inertia tensor is analytically computed so that when something goes wrong in simulation, I can trace the problem to a specific value and fix it.
 
 ### Base and Mobility
-The base is a 0.50 × 0.55 × 0.15 m box at 30 kg — heavy enough to resist tipping when the arm extends forward. Four wheels (r = 0.10 m, width = 0.05 m) are placed at ±0.15 m fore/aft and ±0.30 m laterally for a stable footprint. The collision geometry uses a cylinder (0.35 m radius × 0.80 m height) rather than matching the visual box — this produces smoother contact response when brushing past furniture corners.
+The base is a 0.50 × 0.55 × 0.15 m box at 30 kg — heavy enough to resist tipping when the arm extends forward. Four wheels (r = 0.10 m, width = 0.05 m) are placed at ±0.15 m fore/aft and ±0.30 m laterally for a stable footprint. The collision geometry uses a cylinder (0.35 m radius × 0.60 m height, centred at z = 0.25 m) rather than matching the visual box — this produces smoother contact response when brushing past furniture corners. The cylinder is kept short enough that the torso-mounted LiDAR (z ≈ 0.665 m above base_link) sits above it and is not blocked by the robot's own collision.
 
 Mobility uses `libgazebo_ros_planar_move` for direct velocity control (linear.x + angular.z). I initially tried `libgazebo_ros_diff_drive` with all four wheels, but Gazebo Classic 11 only supports exactly one left + one right joint (see Debugging section). Planar move sidesteps per-wheel PID tuning entirely and lets the navigator focus on path-level control.
 
@@ -28,7 +28,7 @@ Mirrors the right arm geometry with fixed joints set to a relaxed pose (shoulder
 
 ### Sensors
 - **Camera**: 640×480, 80° FOV, 10 Hz, mounted at 60% torso height → `/camera/image_raw`
-- **360° LiDAR**: 360 rays, 0.12–10 m range, 10 Hz → `/scan`
+- **360° LiDAR**: 720 rays, 0.12–8 m range, 10 Hz, torso-mounted → `/scan`
 - **IMU**: 100 Hz at base origin → `/imu`
 
 ---
@@ -51,6 +51,8 @@ Two rooms connected by a 1.6 m wide × 2.0 m tall doorway in a shared wall:
 ```
 
 Furniture placement was intentional — the dining table and chairs create a narrow corridor between the south wall and room centre, forcing the robot to navigate carefully. The bookshelf and couch constrain the north side. In Room 2, the bed dominates the east half, leaving an L-shaped navigable path.
+
+All furniture heights are at least 0.80 m so they intersect the LiDAR scan plane (0.765 m above ground), ensuring the robot detects every obstacle. Heights are varied to look realistic: table 0.80 m, nightstand 0.80 m, bed 0.90 m, desk 0.95 m, chairs/couch 0.85 m, bookshelf 1.80 m, wardrobe 2.00 m.
 
 ### Objects and Collection Box
 Six 0.08 m coloured cubes (mass = 0.2 kg, µ = 0.6) are scattered across both rooms. The open-top green collection box at (0.5, 2.0) is built from five static SDF panels. The vacuum gripper plugin is configured to exclude furniture and walls from pickup.
@@ -89,6 +91,12 @@ The robot stops rotating in place until roughly aligned, then accelerates propor
 5. **Return**: through doorway → south of table → home position
 
 The state machine is simple: **WAIT** (for `/odom` and `/scan`) → **EXPLORE** (follow all waypoints) → **DONE**.
+
+### LiDAR Mapper
+A fourth node (`mapper`) builds a 2-D occupancy grid in real time from `/scan` and `/odom`. It uses Bresenham ray tracing with log-odds updates (L_FREE = −0.3, L_OCC = 0.9) on a 320 × 220 cell grid (0.05 m resolution, covering 16 × 11 m). The grid is published at 2 Hz on `/map` as a `nav_msgs/OccupancyGrid`. On exploration finish (or Ctrl-C), the node captures a screenshot of the RViz window and saves it to `output/lidar_map.png`.
+
+### RViz Visualisation
+Both `tidybot_world.launch.py` and `tidybot_full.launch.py` launch RViz with a pre-configured top-down orthographic view (`mapping.rviz`). The config displays the robot model, occupancy map, accumulated LiDAR points (Decay Time = 9999 s), and TF frames. RViz launches fullscreen with side panels hidden to maximise the map viewport.
 
 ---
 
@@ -129,7 +137,9 @@ Static analysis revealed 3 of 6 objects were beyond the 1.2 m pickup trigger dis
 | Planar move plugin | diff_drive / Ackermann | Avoids per-wheel PID tuning; direct velocity control is simpler and more reliable |
 | Hard-coded waypoints | Nav2 + costmap | Known static environment; waypoints are deterministic and launch instantly |
 | Vacuum gripper + delete/spawn | ros2_control + force-closure | Deterministic object handling; no grasping physics to debug |
-| Cylinder base collision | Matching box collision | Smoother contact with furniture corners; prevents getting stuck on edges |
+| Cylinder base collision | Matching box collision | Smoother contact with furniture corners; prevents getting stuck on edges. Cylinder height kept below LiDAR to avoid self-occlusion |
+| Custom Bresenham mapper | slam_toolbox / cartographer | Zero external dependencies; lightweight log-odds grid is sufficient for a known environment |
+| RViz screenshot capture | Matplotlib rendering | RViz already renders the accumulated scan + occupancy grid perfectly; capturing the window directly avoids reimplementing the visualisation |
 | Box primitives | STL meshes | Faster iteration; the focus is on simulation behaviour, not visual fidelity |
 
 ---

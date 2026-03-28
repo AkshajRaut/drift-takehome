@@ -22,6 +22,7 @@ setup(
             'navigator      = tidybot_navigation.navigator:main',
             'arm_controller = tidybot_navigation.arm_controller:main',
             'gripper        = tidybot_navigation.gripper:main',
+            'mapper         = tidybot_navigation.mapper:main',
         ],
     },
 )

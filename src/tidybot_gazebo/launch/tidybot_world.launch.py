@@ -61,7 +61,11 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(gazebo_ros, 'launch', 'gzserver.launch.py')
         ),
-        launch_arguments={'world': world_file, 'verbose': 'false'}.items(),
+        launch_arguments={
+            'world': world_file,
+            'verbose': 'false',
+            'force_system': 'false',
+        }.items(),
     )
 
     gzclient = IncludeLaunchDescription(
@@ -70,11 +74,23 @@ def generate_launch_description():
         ),
     )
 
+    # ── RViz with pre-configured mapping view ──────────────────
+    rviz_config = os.path.join(gazebo_pkg, 'config', 'mapping.rviz')
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', rviz_config],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true',
                               description='Use simulation (Gazebo) clock'),
         gzserver,
         gzclient,
+        rviz_node,
         # Delay RSP + spawn by 4 s so gzserver is ready
         TimerAction(period=4.0, actions=[OpaqueFunction(function=_make_rsp_and_spawn)]),
     ])

@@ -72,6 +72,20 @@ def generate_launch_description():
         ],
     )
 
+    # ── LiDAR mapper node (delayed 8 s) ────────────────────
+    mapper_node = TimerAction(
+        period=8.0,
+        actions=[
+            Node(
+                package='tidybot_navigation',
+                executable='mapper',
+                name='tidybot_mapper',
+                output='screen',
+                parameters=[{'use_sim_time': use_sim_time}],
+            )
+        ],
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('headless',     default_value='false'),
@@ -79,4 +93,5 @@ def generate_launch_description():
         navigator_node,
         arm_node,
         gripper_node,
+        mapper_node,
     ])

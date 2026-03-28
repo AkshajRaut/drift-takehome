@@ -227,14 +227,14 @@
        FURNITURE — ROOM 1 (Living Room)
   ══════════════════════════════════════════════════════════ -->
 
-  <!-- Dining table (1.2 × 0.8 × 0.75 m) -->
+  <!-- Dining table (1.2 × 0.8 × 0.80 m) -->
   <model name="table_r1">
     <static>true</static>
-    <pose>2.5 1.0 0.375 0 0 0</pose>
+    <pose>2.5 1.0 0.40 0 0 0</pose>
     <link name="link">
-      <collision name="col"><geometry><box><size>1.2 0.8 0.75</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
+      <collision name="col"><geometry><box><size>1.2 0.8 0.80</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
       <visual name="vis">
-        <geometry><box><size>1.2 0.7 0.75</size></box></geometry>
+        <geometry><box><size>1.2 0.7 0.80</size></box></geometry>
         <material><ambient>0.6 0.4 0.2 1</ambient><diffuse>0.6 0.4 0.2 1</diffuse></material>
       </visual>
     </link>
@@ -296,14 +296,14 @@
        FURNITURE — ROOM 2 (Bedroom)
   ══════════════════════════════════════════════════════════ -->
 
-  <!-- Bed (2.0 × 1.5 × 0.5 m) -->
+  <!-- Bed (2.0 × 1.5 × 0.90 m) -->
   <model name="bed_r2">
     <static>true</static>
-    <pose>9.5 1.1 0.25 0 0 0</pose>
+    <pose>9.5 1.1 0.45 0 0 0</pose>
     <link name="link">
-      <collision name="col"><geometry><box><size>2.0 1.5 0.5</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
+      <collision name="col"><geometry><box><size>2.0 1.5 0.90</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
       <visual name="vis">
-        <geometry><box><size>2.0 1.5 0.5</size></box></geometry>
+        <geometry><box><size>2.0 1.5 0.90</size></box></geometry>
         <material><ambient>0.8 0.7 0.6 1</ambient><diffuse>0.8 0.7 0.6 1</diffuse></material>
       </visual>
     </link>
@@ -312,11 +312,11 @@
   <!-- Nightstand -->
   <model name="nightstand_r2">
     <static>true</static>
-    <pose>6.9 1.7 0.3 0 0 0</pose>
+    <pose>6.9 1.7 0.40 0 0 0</pose>
     <link name="link">
-      <collision name="col"><geometry><box><size>0.5 0.5 0.6</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
+      <collision name="col"><geometry><box><size>0.5 0.5 0.80</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
       <visual name="vis">
-        <geometry><box><size>0.5 0.5 0.6</size></box></geometry>
+        <geometry><box><size>0.5 0.5 0.80</size></box></geometry>
         <material><ambient>0.55 0.35 0.15 1</ambient><diffuse>0.55 0.35 0.15 1</diffuse></material>
       </visual>
     </link>
@@ -338,11 +338,11 @@
   <!-- Desk + chair room 2 -->
   <model name="desk_r2">
     <static>true</static>
-    <pose>7.5 -2.0 0.375 0 0 0</pose>
+    <pose>7.5 -2.0 0.475 0 0 0</pose>
     <link name="link">
-      <collision name="col"><geometry><box><size>1.0 0.6 0.75</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
+      <collision name="col"><geometry><box><size>1.0 0.6 0.95</size></box></geometry><surface><contact><ode><kp>100000</kp><kd>100</kd><min_depth>0.002</min_depth><max_vel>2.0</max_vel></ode></contact></surface></collision>
       <visual name="vis">
-        <geometry><box><size>1.0 0.6 0.75</size></box></geometry>
+        <geometry><box><size>1.0 0.6 0.95</size></box></geometry>
         <material><ambient>0.6 0.4 0.2 1</ambient><diffuse>0.6 0.4 0.2 1</diffuse></material>
       </visual>
     </link>
